@@ -50,4 +50,23 @@ defmodule CoreTest do
 
     assert Map.get(Core.details(user), :event_queue, 0) == 2
   end
+
+  test "it should be able to increment or decrement balance of a user" do
+    user = "john"
+
+    Core.start_link(user)
+    Core.create_user(user)
+
+    result1 = Core.update_balance(user, 15, "USD")
+    result2 = Core.update_balance(user, 15, "USD")
+    result3 = Core.update_balance(user, -10, "USD")
+
+    assert result1 == 15
+    assert result2 == 30
+    assert result3 == 20
+
+    overall = Structs.User.get_currency(Core.details(user), "USD")
+
+    assert overall == 20
+  end
 end

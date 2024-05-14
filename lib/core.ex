@@ -20,6 +20,11 @@ defmodule Core do
     GenServer.call(server_name_for(user_name), :details)
   end
 
+  @doc "Appends given amount in currency to requested user's balance."
+  def update_balance(user_name, amount, currency) do
+    GenServer.call(server_name_for(user_name), {:update_balance, amount, currency})
+  end
+
   @doc "Adds a job to the queue."
   def increment_queue_for(user_name) do
     GenServer.cast(server_name_for(user_name), :queue_increment)
@@ -60,6 +65,13 @@ defmodule Core do
   @impl true
   def handle_call(:details, _from, state) do
     {:reply, state, state}
+  end
+
+  @impl true
+  def handle_call({:update_balance, amount, currency}, _from, state) do
+    new_state = User.add_currency(state, amount, currency)
+
+    {:reply, User.get_currency(new_state, currency), new_state}
   end
 
   # Increments job queue by 1.

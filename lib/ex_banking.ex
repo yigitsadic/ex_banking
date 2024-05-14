@@ -19,8 +19,24 @@ defmodule ExBanking do
 
   def create_user(_any), do: @wrong_arguments_result
 
-  def deposit(_user, amount, _currency) do
-    {:ok, amount}
+  @spec deposit(user :: String.t(), amount :: number, currency :: String.t()) ::
+          {:ok, new_balance :: number()}
+          | {:error, :wrong_arguments | :user_does_not_exist | :too_many_requests_to_user}
+  def deposit(user, amount, currency) do
+    with {:user_name_valid, true} <- {:user_name_valid, valid_string?(user)},
+         {:currency_valid, true} <- {:currency_valid, valid_string?(currency)},
+         {:amount_valid, true} <- {:amount_valid, valid_number?(amount)},
+         _ <- Core.start_link(user),
+         found_user <- Core.details(user),
+         {:user_exists, true} <- {:user_exists, Structs.User.user_exists?(found_user)},
+         new_balance <- Core.update_balance(user, amount, currency) do
+      {:ok, new_balance}
+    else
+      {:user_name_valid, false} -> @wrong_arguments_result
+      {:currency_valid, false} -> @wrong_arguments_result
+      {:amount_valid, false} -> @wrong_arguments_result
+      {:user_exists, false} -> {:error, :user_does_not_exist}
+    end
   end
 
   def withdraw(_user, amount, _currency) do
