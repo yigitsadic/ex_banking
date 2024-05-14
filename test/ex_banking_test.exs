@@ -159,6 +159,26 @@ defmodule ExBankingTest do
     assert ExBanking.get_balance("sinem", "USD") == {:ok, 10}
   end
 
+  test "send should cast to from_user and to_user's processes" do
+    ExBanking.create_user("yigit")
+    ExBanking.create_user("sinem")
+    ExBanking.deposit("yigit", 40, "USD")
+
+    pid1 = Core.server_name_for("yigit") |> GenServer.whereis()
+    pid2 = Core.server_name_for("sinem") |> GenServer.whereis()
+
+    :erlang.trace(pid1, true, [:receive])
+    :erlang.trace(pid2, true, [:receive])
+
+    ExBanking.send("yigit", "sinem", 20, "USD")
+
+    assert_receive {:trace, ^pid1, :receive, {:"$gen_cast", :queue_increment}}
+    assert_receive {:trace, ^pid1, :receive, {:"$gen_cast", :queue_decrement}}
+
+    assert_receive {:trace, ^pid2, :receive, {:"$gen_cast", :queue_increment}}
+    assert_receive {:trace, ^pid2, :receive, {:"$gen_cast", :queue_decrement}}
+  end
+
   def create_user(user_name) do
     ExBanking.create_user(user_name)
   end
