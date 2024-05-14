@@ -58,8 +58,37 @@ defmodule ExBankingTest do
     assert result == 2
   end
 
-  test "withdraw" do
-    assert ExBanking.withdraw("yigit", 15, "EUR") == {:ok, 15}
+  test "withdraw should validate user name" do
+    assert ExBanking.withdraw("", 15, "EUR") == {:error, :wrong_arguments}
+  end
+
+  test "withdraw should validate existence of user" do
+    assert ExBanking.withdraw("yigit", 15, "EUR") == {:error, :user_does_not_exist}
+  end
+
+  test "withdraw should validate amount" do
+    assert ExBanking.withdraw("yigit", 0, "EUR") == {:error, :wrong_arguments}
+    assert ExBanking.withdraw("yigit", -2, "EUR") == {:error, :wrong_arguments}
+  end
+
+  test "withdraw should validate currency" do
+    assert ExBanking.withdraw("yigit", 2, "") == {:error, :wrong_arguments}
+  end
+
+  test "withdraw should validate does user's balance enough" do
+    ExBanking.create_user("yigit")
+
+    assert ExBanking.withdraw("yigit", 10, "USD") == {:error, :not_enough_money}
+  end
+
+  test "after withdraw balance should be decreased" do
+    ExBanking.create_user("yigit")
+    ExBanking.deposit("yigit", 10, "USD")
+
+    {:ok, new_balance} = ExBanking.withdraw("yigit", 5, "USD")
+
+    assert new_balance == 5
+    assert {:ok, new_balance} == ExBanking.get_balance("yigit", "USD")
   end
 
   test "get_balance user should be valid" do
