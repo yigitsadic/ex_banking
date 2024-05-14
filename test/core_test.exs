@@ -19,4 +19,8 @@ defmodule CoreTest do
     assert result == expected_output
     assert Core.details(state[:user_name]) == expected_output
   end
+
+  test "server_name_for should create unified reference" do
+    assert Core.server_name_for("yigit") == {:global, "user_yigit"}
+  end
 end
