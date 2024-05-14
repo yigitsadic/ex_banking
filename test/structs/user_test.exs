@@ -40,14 +40,14 @@ defmodule Structs.UserTest do
     user = User.new("user")
     user = Map.put(user, :event_queue, 11)
 
-    assert User.queue_full?(user) == {:ok, true}
-    assert User.queue_full?(5) == {:error}
-    assert User.queue_full?("5") == {:error}
-    assert User.queue_full?(nil) == {:error}
-    assert User.queue_full?(%{}) == {:error}
+    assert User.queue_full?(user)
+    assert User.queue_full?(5) == :error
+    assert User.queue_full?("5") == :error
+    assert User.queue_full?(nil) == :error
+    assert User.queue_full?(%{}) == :error
 
     user = Map.put(user, :event_queue, 9)
-    assert User.queue_full?(user) == {:ok, false}
+    refute User.queue_full?(user)
   end
 
   test "it should increment queue" do

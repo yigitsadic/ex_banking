@@ -4,6 +4,7 @@ defmodule ExBanking do
   @wrong_arguments_result {:error, :wrong_arguments}
   @user_does_not_exists_result {:error, :user_does_not_exist}
   @not_enough_money_result {:error, :not_enough_money}
+  @too_many_requests_to_user_result {:error, :too_many_requests_to_user}
 
   @spec create_user(user :: String.t()) :: :ok | {:error, :wrong_arguments | :user_already_exists}
   def create_user(user) when is_bitstring(user) do
@@ -31,6 +32,7 @@ defmodule ExBanking do
          _ <- Core.start_link(user),
          found_user <- Core.details(user),
          {:user_exists, true} <- {:user_exists, Structs.User.user_exists?(found_user)},
+         {:queue_full, false} <- {:queue_full, Structs.User.queue_full?(found_user)},
          new_balance <- Core.update_balance(user, amount, currency) do
       {:ok, new_balance}
     else
@@ -38,6 +40,8 @@ defmodule ExBanking do
       {:currency_valid, false} -> @wrong_arguments_result
       {:amount_valid, false} -> @wrong_arguments_result
       {:user_exists, false} -> @user_does_not_exists_result
+      {:queue_full, true} -> @too_many_requests_to_user_result
+      {:queue_full, :error} -> @too_many_requests_to_user_result
     end
   end
 
@@ -57,14 +61,30 @@ defmodule ExBanking do
          {:user_exists, true} <- {:user_exists, Structs.User.user_exists?(found_user)},
          {:has_enough_money, true} <-
            {:has_enough_money, Structs.User.can_withdraw?(found_user, amount, currency)},
+         {:queue_full, false} <- {:queue_full, Structs.User.queue_full?(found_user)},
          new_balance <- Core.update_balance(user, amount * -1, currency) do
       {:ok, new_balance}
     else
-      {:user_name_valid, false} -> @wrong_arguments_result
-      {:currency_valid, false} -> @wrong_arguments_result
-      {:amount_valid, false} -> @wrong_arguments_result
-      {:user_exists, false} -> @user_does_not_exists_result
-      {:has_enough_money, false} -> @not_enough_money_result
+      {:user_name_valid, false} ->
+        @wrong_arguments_result
+
+      {:currency_valid, false} ->
+        @wrong_arguments_result
+
+      {:amount_valid, false} ->
+        @wrong_arguments_result
+
+      {:user_exists, false} ->
+        @user_does_not_exists_result
+
+      {:has_enough_money, false} ->
+        @not_enough_money_result
+
+      {:queue_full, true} ->
+        @too_many_requests_to_user_result
+
+      {:queue_full, :error} ->
+        @too_many_requests_to_user_result
     end
   end
 
@@ -77,12 +97,24 @@ defmodule ExBanking do
          _ <- Core.start_link(user),
          found_user <- Core.details(user),
          {:user_exists, true} <- {:user_exists, Structs.User.user_exists?(found_user)},
+         {:queue_full, false} <- {:queue_full, Structs.User.queue_full?(found_user)},
          balance <- Core.get_balance(user, currency) do
       {:ok, balance}
     else
-      {:user_name_valid, false} -> @wrong_arguments_result
-      {:currency_valid, false} -> @wrong_arguments_result
-      {:user_exists, false} -> @user_does_not_exists_result
+      {:user_name_valid, false} ->
+        @wrong_arguments_result
+
+      {:currency_valid, false} ->
+        @wrong_arguments_result
+
+      {:user_exists, false} ->
+        @user_does_not_exists_result
+
+      {:queue_full, true} ->
+        @too_many_requests_to_user_result
+
+      {:queue_full, :error} ->
+        @too_many_requests_to_user_result
     end
   end
 
@@ -109,9 +141,13 @@ defmodule ExBanking do
          found_from_user <- Core.details(from_user),
          {:from_user_exists, true} <-
            {:from_user_exists, Structs.User.user_exists?(found_from_user)},
+         {:from_user_queue_full, false} <-
+           {:from_user_queue_full, Structs.User.queue_full?(found_from_user)},
          _ <- Core.start_link(to_user),
          found_to_user <- Core.details(to_user),
          {:to_user_exists, true} <- {:to_user_exists, Structs.User.user_exists?(found_to_user)},
+         {:to_user_queue_full, false} <-
+           {:to_user_queue_full, Structs.User.queue_full?(found_to_user)},
          {:has_enough_money, true} <-
            {:has_enough_money, Structs.User.can_withdraw?(found_from_user, amount, currency)},
          new_sender_balance <- Core.update_balance(from_user, amount * -1, currency),
@@ -125,6 +161,8 @@ defmodule ExBanking do
       {:from_user_exists, false} -> {:error, :sender_does_not_exist}
       {:to_user_exists, false} -> {:error, :receiver_does_not_exist}
       {:has_enough_money, false} -> @not_enough_money_result
+      {:from_user_queue_full, true} -> {:error, :too_many_requests_to_sender}
+      {:to_user_queue_full, true} -> {:error, :too_many_requests_to_receiver}
     end
   end
 end

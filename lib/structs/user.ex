@@ -40,17 +40,17 @@ defmodule Structs.User do
   end
 
   @doc "Checks if given users event queue is full."
-  @spec queue_full?(user :: t()) :: {:ok, boolean()} | {:error}
+  @spec queue_full?(user :: t()) :: boolean() | :error
   def queue_full?(user) when is_map(user) do
     if :event_queue in Map.keys(user) do
-      {:ok, Map.get(user, :event_queue, 0) >= @max_event_queue}
+      Map.get(user, :event_queue, 0) >= @max_event_queue
     else
-      {:error}
+      :error
     end
   end
 
-  @spec queue_full?(_user :: any()) :: {:error}
-  def queue_full?(_user), do: {:error}
+  @spec queue_full?(_user :: any()) :: :error
+  def queue_full?(_user), do: :error
 
   @doc "Returns queue incremented user."
   @spec increment_queue(user :: t()) :: t()
