@@ -49,4 +49,31 @@ defmodule Structs.UserTest do
     user = Map.put(user, :event_queue, 9)
     assert User.queue_full?(user) == {:ok, false}
   end
+
+  test "it should increment queue" do
+    user = User.new("user")
+
+    user = User.increment_queue(user)
+    user = User.increment_queue(user)
+
+    assert user.event_queue == 2
+  end
+
+  test "it should decrement queue" do
+    user = User.new("user")
+
+    assert user.event_queue == 0
+
+    user = User.decrement_queue(user)
+    user = User.decrement_queue(user)
+
+    # Ensure it won't becomes negative.
+    assert user.event_queue == 0
+
+    user = User.increment_queue(user)
+    user = User.increment_queue(user)
+    user = User.decrement_queue(user)
+
+    assert user.event_queue == 1
+  end
 end

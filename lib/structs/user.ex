@@ -52,6 +52,18 @@ defmodule Structs.User do
   @spec queue_full?(_user :: any()) :: {:error}
   def queue_full?(_user), do: {:error}
 
+  @doc "Returns queue incremented user."
+  @spec increment_queue(user :: t()) :: t()
+  def increment_queue(user) do
+    Map.put(user, :event_queue, user.event_queue + 1)
+  end
+
+  @doc "Returns queue decremented user. Minimum value will always be 0."
+  @spec decrement_queue(user :: t()) :: t()
+  def decrement_queue(user) do
+    Map.put(user, :event_queue, max(0, user.event_queue - 1))
+  end
+
   @doc "Returns a struct filled with given name"
   @spec new(name :: String.t()) :: t()
   def new(name) when is_bitstring(name) do
