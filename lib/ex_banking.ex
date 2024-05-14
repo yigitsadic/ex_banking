@@ -3,6 +3,7 @@ defmodule ExBanking do
 
   @wrong_arguments_result {:error, :wrong_arguments}
   @user_does_not_exists_result {:error, :user_does_not_exist}
+  @not_enough_money_result {:error, :not_enough_money}
 
   @spec create_user(user :: String.t()) :: :ok | {:error, :wrong_arguments | :user_already_exists}
   def create_user(user) when is_bitstring(user) do
@@ -63,7 +64,7 @@ defmodule ExBanking do
       {:currency_valid, false} -> @wrong_arguments_result
       {:amount_valid, false} -> @wrong_arguments_result
       {:user_exists, false} -> @user_does_not_exists_result
-      {:has_enough_money, false} -> {:error, :not_enough_money}
+      {:has_enough_money, false} -> @not_enough_money_result
     end
   end
 
@@ -85,7 +86,45 @@ defmodule ExBanking do
     end
   end
 
-  def send(_from_user, _to_user, amount, _currency) do
-    {:ok, 0, amount}
+  @spec send(
+          from_user :: String.t(),
+          to_user :: String.t(),
+          amount :: number,
+          currency :: String.t()
+        ) ::
+          {:ok, from_user_balance :: number, to_user_balance :: number}
+          | {:error,
+             :wrong_arguments
+             | :not_enough_money
+             | :sender_does_not_exist
+             | :receiver_does_not_exist
+             | :too_many_requests_to_sender
+             | :too_many_requests_to_receiver}
+  def send(from_user, to_user, amount, currency) do
+    with {:from_user_name_valid, true} <- {:from_user_name_valid, valid_string?(from_user)},
+         {:to_user_name_valid, true} <- {:to_user_name_valid, valid_string?(to_user)},
+         {:currency_valid, true} <- {:currency_valid, valid_string?(currency)},
+         {:amount_valid, true} <- {:amount_valid, valid_number?(amount)},
+         _ <- Core.start_link(from_user),
+         found_from_user <- Core.details(from_user),
+         {:from_user_exists, true} <-
+           {:from_user_exists, Structs.User.user_exists?(found_from_user)},
+         _ <- Core.start_link(to_user),
+         found_to_user <- Core.details(to_user),
+         {:to_user_exists, true} <- {:to_user_exists, Structs.User.user_exists?(found_to_user)},
+         {:has_enough_money, true} <-
+           {:has_enough_money, Structs.User.can_withdraw?(found_from_user, amount, currency)},
+         new_sender_balance <- Core.update_balance(from_user, amount * -1, currency),
+         new_receiver_balance <- Core.update_balance(to_user, amount, currency) do
+      {:ok, new_sender_balance, new_receiver_balance}
+    else
+      {:from_user_name_valid, false} -> @wrong_arguments_result
+      {:to_user_name_valid, false} -> @wrong_arguments_result
+      {:currency_valid, false} -> @wrong_arguments_result
+      {:amount_valid, false} -> @wrong_arguments_result
+      {:from_user_exists, false} -> {:error, :sender_does_not_exist}
+      {:to_user_exists, false} -> {:error, :receiver_does_not_exist}
+      {:has_enough_money, false} -> @not_enough_money_result
+    end
   end
 end

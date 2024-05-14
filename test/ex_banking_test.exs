@@ -111,8 +111,52 @@ defmodule ExBankingTest do
     assert ExBanking.get_balance("yigit", "USD") == {:ok, 10}
   end
 
-  test "send" do
-    assert ExBanking.send("yigit", "sadic", 15, "EUR") == {:ok, 0, 15}
+  test "send should validate sender name" do
+    assert ExBanking.send("", "yigit", 15, "USD") == {:error, :wrong_arguments}
+  end
+
+  test "send should validate receiver name" do
+    assert ExBanking.send("yigit", "", 15, "USD") == {:error, :wrong_arguments}
+  end
+
+  test "send should validate currency" do
+    assert ExBanking.send("yigit", "sinem", 15, "") == {:error, :wrong_arguments}
+  end
+
+  test "send should validate amount" do
+    assert ExBanking.send("yigit", "sinem", -15, "USD") == {:error, :wrong_arguments}
+    assert ExBanking.send("yigit", "sinem", "-15", "USD") == {:error, :wrong_arguments}
+    assert ExBanking.send("yigit", "sinem", 0, "USD") == {:error, :wrong_arguments}
+  end
+
+  test "send should check existance of sender" do
+    ExBanking.create_user("sinem")
+
+    assert ExBanking.send("yigit", "sinem", 15, "USD") == {:error, :sender_does_not_exist}
+  end
+
+  test "send should check existance of receiver" do
+    ExBanking.create_user("yigit")
+
+    assert ExBanking.send("yigit", "sinem", 15, "USD") == {:error, :receiver_does_not_exist}
+  end
+
+  test "send should check balance of sender" do
+    ExBanking.create_user("yigit")
+    ExBanking.create_user("sinem")
+
+    assert ExBanking.send("yigit", "sinem", 15, "USD") == {:error, :not_enough_money}
+  end
+
+  test "send should successfully transfer amount" do
+    ExBanking.create_user("yigit")
+    ExBanking.create_user("sinem")
+    ExBanking.deposit("yigit", 40, "USD")
+    result = ExBanking.send("yigit", "sinem", 10, "USD")
+
+    assert result == {:ok, 30, 10}
+    assert ExBanking.get_balance("yigit", "USD") == {:ok, 30}
+    assert ExBanking.get_balance("sinem", "USD") == {:ok, 10}
   end
 
   def create_user(user_name) do
