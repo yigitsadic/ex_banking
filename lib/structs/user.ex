@@ -64,6 +64,11 @@ defmodule Structs.User do
     Map.put(user, :event_queue, max(0, user.event_queue - 1))
   end
 
+  @spec user_exists?(user :: map()) :: boolean()
+  def user_exists?(user) do
+    Map.get(user, :username, "") != ""
+  end
+
   @doc "Returns a struct filled with given name"
   @spec new(name :: String.t()) :: t()
   def new(name) when is_bitstring(name) do

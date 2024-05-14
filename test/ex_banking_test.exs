@@ -5,6 +5,27 @@ defmodule ExBankingTest do
     assert ExBanking.create_user("yigit") == :ok
   end
 
+  test "validate input for user create" do
+    bad_inputs = [
+      15,
+      nil,
+      false,
+      %{},
+      [],
+      "",
+      "  "
+    ]
+
+    Enum.each(bad_inputs, fn inpt ->
+      assert ExBanking.create_user(inpt) == {:error, :wrong_arguments}
+    end)
+  end
+
+  test "cannot create a user second time" do
+    assert :ok == ExBanking.create_user("lorem")
+    assert {:error, :user_already_exists} == ExBanking.create_user("lorem")
+  end
+
   test "deposit" do
     assert ExBanking.deposit("yigit", 15, "EUR") == {:ok, 15}
   end

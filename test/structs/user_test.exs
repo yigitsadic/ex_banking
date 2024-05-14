@@ -76,4 +76,14 @@ defmodule Structs.UserTest do
 
     assert user.event_queue == 1
   end
+
+  test "it can check a map is valid user struct" do
+    map1 = %{age: 15}
+    map2 = %{book_name: "Elixir"}
+    map3 = User.new("yigit")
+
+    assert User.user_exists?(map3)
+    refute User.user_exists?(map1)
+    refute User.user_exists?(map2)
+  end
 end
