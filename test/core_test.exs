@@ -78,4 +78,28 @@ defmodule CoreTest do
     assert Core.get_balance(user, "EUR") == 0
     assert Core.get_balance(user, "USD") == 15
   end
+
+  test "get_balance casts queue_increment and queue_decrement", state do
+    Core.create_user(state[:user_name])
+    pid = state[:pid]
+
+    :erlang.trace(pid, true, [:receive])
+
+    Core.get_balance(state[:user_name], "USD")
+
+    assert_receive {:trace, ^pid, :receive, {:"$gen_cast", :queue_increment}}
+    assert_receive {:trace, ^pid, :receive, {:"$gen_cast", :queue_decrement}}
+  end
+
+  test "update_balance fires queue_increment and queue_decrement", state do
+    Core.create_user(state[:user_name])
+    pid = state[:pid]
+
+    :erlang.trace(pid, true, [:receive])
+
+    Core.update_balance(state[:user_name], 10, "USD")
+
+    assert_receive {:trace, ^pid, :receive, {:"$gen_cast", :queue_increment}}
+    assert_receive {:trace, ^pid, :receive, {:"$gen_cast", :queue_decrement}}
+  end
 end
