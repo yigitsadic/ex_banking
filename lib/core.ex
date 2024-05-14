@@ -7,6 +7,7 @@ defmodule Core do
 
   use GenServer
   alias Structs.User
+  require Events
 
   # Client side
 
@@ -22,24 +23,17 @@ defmodule Core do
 
   @doc "Fetches requested balance in currency."
   def get_balance(user_name, currency) do
-    increment_queue_for(user_name)
-
-    user = GenServer.call(server_name_for(user_name), :get_balance)
-
-    decrement_queue_for(user_name)
-
-    User.get_currency(user, currency)
+    Events.cast_messages user_name do
+      user = GenServer.call(server_name_for(user_name), :get_balance)
+      User.get_currency(user, currency)
+    end
   end
 
   @doc "Appends given amount in currency to requested user's balance."
   def update_balance(user_name, amount, currency) do
-    increment_queue_for(user_name)
-
-    result = GenServer.call(server_name_for(user_name), {:update_balance, amount, currency})
-
-    decrement_queue_for(user_name)
-
-    result
+    Events.cast_messages user_name do
+      GenServer.call(server_name_for(user_name), {:update_balance, amount, currency})
+    end
   end
 
   @doc "Adds a job to the queue."
