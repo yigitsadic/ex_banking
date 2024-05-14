@@ -30,10 +30,10 @@ defmodule Structs.UserTest do
 
     user = User.add_currency(user, 15.75, "USD")
 
-    assert User.can_withdraw?(user, 15.76, "USD") == false
-    assert User.can_withdraw?(user, 15.75, "USD") == true
-    assert User.can_withdraw?(user, 15.75, "EUR") == false
-    assert User.can_withdraw?(user, 14.75, "USD") == true
+    refute User.can_withdraw?(user, 15.76, "USD")
+    assert User.can_withdraw?(user, 15.75, "USD")
+    refute User.can_withdraw?(user, 15.75, "EUR")
+    assert User.can_withdraw?(user, 14.75, "USD")
   end
 
   test "it should return queue full if it is" do

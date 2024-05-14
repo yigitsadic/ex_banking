@@ -6,7 +6,7 @@ defmodule ValidatorsTest do
   end
 
   test "valid_string? calling without parameters should return false" do
-    assert Validators.valid_string?() == false
+    refute Validators.valid_string?()
   end
 
   test "calling valid_string? with another type should return false" do
@@ -20,13 +20,13 @@ defmodule ValidatorsTest do
     ]
 
     Enum.each(test_cases, fn inp ->
-      assert Validators.valid_string?(inp) == false
+      refute Validators.valid_string?(inp)
     end)
   end
 
   test "calling valid_string with an empty string should return false" do
-    assert Validators.valid_string?("") == false
-    assert Validators.valid_string?("  ") == false
+    refute Validators.valid_string?("")
+    refute Validators.valid_string?("  ")
   end
 
   test "should return true for valid number" do
@@ -36,7 +36,7 @@ defmodule ValidatorsTest do
   end
 
   test "calling valid_number?() without any arguments should return false" do
-    assert Validators.valid_number?() == false
+    refute Validators.valid_number?()
   end
 
   test "valid_number?() should be called with a number only" do
@@ -50,12 +50,12 @@ defmodule ValidatorsTest do
     ]
 
     Enum.each(test_cases, fn inp ->
-      assert Validators.valid_number?(inp) == false
+      refute Validators.valid_number?(inp)
     end)
   end
 
   test "calling valid number with a negative or zero should return false" do
-    assert Validators.valid_number?(-5) == false
-    assert Validators.valid_number?(0) == false
+    refute Validators.valid_number?(-5)
+    refute Validators.valid_number?(0)
   end
 end
