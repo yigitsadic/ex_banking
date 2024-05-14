@@ -20,6 +20,22 @@ defmodule Core do
     GenServer.call(server_name_for(user_name), :details)
   end
 
+  @doc "Adds a job to the queue."
+  def increment_queue_for(user_name) do
+    GenServer.cast(server_name_for(user_name), :queue_increment)
+  end
+
+  @doc "Removes a job from the queue."
+  def decrement_queue_for(user_name) do
+    GenServer.cast(server_name_for(user_name), :queue_decrement)
+  end
+
+  @doc "Returns unique server name for user."
+  @spec server_name_for(user_name :: String.t()) :: {:global, String.t()}
+  def server_name_for(user_name) when is_bitstring(user_name) do
+    {:global, "user_#{user_name}"}
+  end
+
   @doc "Fires a new process named with given user's name."
   def start_link(user_name) do
     GenServer.start_link(__MODULE__, %{}, name: server_name_for(user_name))
@@ -46,9 +62,15 @@ defmodule Core do
     {:reply, state, state}
   end
 
-  @doc "Returns unique server name for user."
-  @spec server_name_for(user_name :: String.t()) :: {:global, String.t()}
-  def server_name_for(user_name) when is_bitstring(user_name) do
-    {:global, "user_#{user_name}"}
+  # Increments job queue by 1.
+  @impl true
+  def handle_cast(:queue_increment, state) do
+    {:noreply, User.increment_queue(state)}
+  end
+
+  # Decrement job queue by 1.
+  @impl true
+  def handle_cast(:queue_decrement, state) do
+    {:noreply, User.decrement_queue(state)}
   end
 end
