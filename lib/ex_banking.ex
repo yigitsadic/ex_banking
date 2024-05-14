@@ -2,6 +2,7 @@ defmodule ExBanking do
   import Validators
 
   @wrong_arguments_result {:error, :wrong_arguments}
+  @user_does_not_exists_result {:error, :user_does_not_exist}
 
   @spec create_user(user :: String.t()) :: :ok | {:error, :wrong_arguments | :user_already_exists}
   def create_user(user) when is_bitstring(user) do
@@ -35,7 +36,7 @@ defmodule ExBanking do
       {:user_name_valid, false} -> @wrong_arguments_result
       {:currency_valid, false} -> @wrong_arguments_result
       {:amount_valid, false} -> @wrong_arguments_result
-      {:user_exists, false} -> {:error, :user_does_not_exist}
+      {:user_exists, false} -> @user_does_not_exists_result
     end
   end
 
@@ -43,8 +44,22 @@ defmodule ExBanking do
     {:ok, amount}
   end
 
-  def get_balance(_user, _currency) do
-    {:ok, 15}
+  @spec get_balance(user :: String.t(), currency :: String.t()) ::
+          {:ok, balance :: number}
+          | {:error, :wrong_arguments | :user_does_not_exist | :too_many_requests_to_user}
+  def get_balance(user, currency) do
+    with {:user_name_valid, true} <- {:user_name_valid, valid_string?(user)},
+         {:currency_valid, true} <- {:currency_valid, valid_string?(currency)},
+         _ <- Core.start_link(user),
+         found_user <- Core.details(user),
+         {:user_exists, true} <- {:user_exists, Structs.User.user_exists?(found_user)},
+         balance <- Core.get_balance(user, currency) do
+      {:ok, balance}
+    else
+      {:user_name_valid, false} -> @wrong_arguments_result
+      {:currency_valid, false} -> @wrong_arguments_result
+      {:user_exists, false} -> @user_does_not_exists_result
+    end
   end
 
   def send(_from_user, _to_user, amount, _currency) do

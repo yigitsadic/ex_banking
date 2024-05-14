@@ -62,8 +62,24 @@ defmodule ExBankingTest do
     assert ExBanking.withdraw("yigit", 15, "EUR") == {:ok, 15}
   end
 
-  test "get_balance" do
-    assert ExBanking.get_balance("yigit", "EUR") == {:ok, 15}
+  test "get_balance user should be valid" do
+    assert ExBanking.get_balance("", "EUR") == {:error, :wrong_arguments}
+  end
+
+  test "get_balance currency should be valid" do
+    assert ExBanking.get_balance("yigit", "") == {:error, :wrong_arguments}
+  end
+
+  test "get_balance user should exists" do
+    assert ExBanking.get_balance("yigit", "EUR") == {:error, :user_does_not_exist}
+  end
+
+  test "get_balance should respond correctly" do
+    ExBanking.create_user("yigit")
+    assert ExBanking.get_balance("yigit", "USD") == {:ok, 0}
+
+    ExBanking.deposit("yigit", 10, "USD")
+    assert ExBanking.get_balance("yigit", "USD") == {:ok, 10}
   end
 
   test "send" do

@@ -20,6 +20,12 @@ defmodule Core do
     GenServer.call(server_name_for(user_name), :details)
   end
 
+  @doc "Fetches requested balance in currency."
+  def get_balance(user_name, currency) do
+    user = details(user_name)
+    User.get_currency(user, currency)
+  end
+
   @doc "Appends given amount in currency to requested user's balance."
   def update_balance(user_name, amount, currency) do
     GenServer.call(server_name_for(user_name), {:update_balance, amount, currency})

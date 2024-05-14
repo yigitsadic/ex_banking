@@ -65,8 +65,17 @@ defmodule CoreTest do
     assert result2 == 30
     assert result3 == 20
 
-    overall = Structs.User.get_currency(Core.details(user), "USD")
+    assert Core.get_balance(user, "USD") == 20
+  end
 
-    assert overall == 20
+  test "it can read balance of user with a currency" do
+    user = "john"
+    Core.start_link(user)
+    Core.create_user(user)
+
+    Core.update_balance(user, 15, "USD")
+
+    assert Core.get_balance(user, "EUR") == 0
+    assert Core.get_balance(user, "USD") == 15
   end
 end
