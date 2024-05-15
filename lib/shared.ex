@@ -1,8 +1,15 @@
 defmodule Shared do
+  @spec wrong_arguments_result() :: {:error, :wrong_arguments}
   def wrong_arguments_result(), do: {:error, :wrong_arguments}
+
+  @spec not_enough_money_result() :: {:error, :not_enough_money}
   def not_enough_money_result(), do: {:error, :not_enough_money}
+
+  @spec user_already_exists() :: {:error, :user_already_exists}
   def user_already_exists(), do: {:error, :user_already_exists}
 
+  @spec user_does_not_exists_result() ::
+          {:error, :receiver_does_not_exist | :sender_does_not_exist | :user_does_not_exist}
   def user_does_not_exists_result(user_type \\ :default) do
     case user_type do
       :sender -> {:error, :sender_does_not_exist}
@@ -11,6 +18,11 @@ defmodule Shared do
     end
   end
 
+  @spec too_many_requests_to_user_result() ::
+          {:error,
+           :too_many_requests_to_receiver
+           | :too_many_requests_to_sender
+           | :too_many_requests_to_user}
   def too_many_requests_to_user_result(user_type \\ :default) do
     case user_type do
       :sender -> {:error, :too_many_requests_to_sender}
@@ -31,6 +43,7 @@ defmodule Shared do
     end
   end
 
+  @spec all_valid?([{any(), function()}]) :: boolean()
   def all_valid?(list) do
     Enum.map(list, fn {val, fun} ->
       fun.(val)
