@@ -12,7 +12,7 @@ Also, one requirement was 2 decimal precision of money. In my everyday approach 
 
 ## Code organization
 
-`ExBanking` module has the only wanted functions those explained below as specs.
+`ExBanking` module has the only wanted functions' delegations. Controller logic lies under `internal` folder.
 
 `Events` is a macro for casting `queue_increment` and `queue_decrement` messages to corresponding processes during an action (like `deposit`).
 
