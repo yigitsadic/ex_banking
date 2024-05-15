@@ -26,17 +26,19 @@ defmodule ExBanking do
           {:ok, new_balance :: number}
           | {:error, :wrong_arguments | :user_does_not_exist | :too_many_requests_to_user}
   def deposit(user, amount, currency) do
-    with {:user_name_valid, true} <- {:user_name_valid, valid_string?(user)},
-         {:currency_valid, true} <- {:currency_valid, valid_string?(currency)},
-         {:amount_valid, true} <- {:amount_valid, valid_number?(amount)},
+    with {:params_valid, true} <-
+           {:params_valid,
+            all_valid?([
+              {user, &valid_string?/1},
+              {currency, &valid_string?/1},
+              {amount, &valid_number?/1}
+            ])},
          {:user_exists, true, found_user} <- check_users_existance(:user_exists, user),
          {:queue_full, false} <- {:queue_full, Structs.User.queue_full?(found_user)},
          new_balance <- Core.update_balance(user, amount, currency) do
       {:ok, new_balance: new_balance}
     else
-      {:user_name_valid, false} -> @wrong_arguments_result
-      {:currency_valid, false} -> @wrong_arguments_result
-      {:amount_valid, false} -> @wrong_arguments_result
+      {:params_valid, false} -> @wrong_arguments_result
       {:user_exists, false, nil} -> @user_does_not_exists_result
       {:queue_full, true} -> @too_many_requests_to_user_result
       {:queue_full, :error} -> @too_many_requests_to_user_result
@@ -51,9 +53,13 @@ defmodule ExBanking do
              | :not_enough_money
              | :too_many_requests_to_user}
   def withdraw(user, amount, currency) do
-    with {:user_name_valid, true} <- {:user_name_valid, valid_string?(user)},
-         {:currency_valid, true} <- {:currency_valid, valid_string?(currency)},
-         {:amount_valid, true} <- {:amount_valid, valid_number?(amount)},
+    with {:params_valid, true} <-
+           {:params_valid,
+            all_valid?([
+              {user, &valid_string?/1},
+              {currency, &valid_string?/1},
+              {amount, &valid_number?/1}
+            ])},
          {:user_exists, true, found_user} <- check_users_existance(:user_exists, user),
          {:has_enough_money, true} <-
            {:has_enough_money, Structs.User.can_withdraw?(found_user, amount, currency)},
@@ -61,13 +67,7 @@ defmodule ExBanking do
          new_balance <- Core.update_balance(user, amount * -1, currency) do
       {:ok, new_balance: new_balance}
     else
-      {:user_name_valid, false} ->
-        @wrong_arguments_result
-
-      {:currency_valid, false} ->
-        @wrong_arguments_result
-
-      {:amount_valid, false} ->
+      {:params_valid, false} ->
         @wrong_arguments_result
 
       {:user_exists, false, nil} ->
@@ -127,10 +127,14 @@ defmodule ExBanking do
              | :too_many_requests_to_sender
              | :too_many_requests_to_receiver}
   def send(from_user, to_user, amount, currency) do
-    with {:from_user_name_valid, true} <- {:from_user_name_valid, valid_string?(from_user)},
-         {:to_user_name_valid, true} <- {:to_user_name_valid, valid_string?(to_user)},
-         {:currency_valid, true} <- {:currency_valid, valid_string?(currency)},
-         {:amount_valid, true} <- {:amount_valid, valid_number?(amount)},
+    with {:params_valid, true} <-
+           {:params_valid,
+            all_valid?([
+              {from_user, &valid_string?/1},
+              {to_user, &valid_string?/1},
+              {currency, &valid_string?/1},
+              {amount, &valid_number?/1}
+            ])},
          {:from_user_exists, true, found_from_user} <-
            check_users_existance(:from_user_exists, from_user),
          {:from_user_queue_full, false} <-
@@ -145,10 +149,7 @@ defmodule ExBanking do
          new_receiver_balance <- Core.update_balance(to_user, amount, currency) do
       {:ok, from_user_balance: new_sender_balance, to_user_balance: new_receiver_balance}
     else
-      {:from_user_name_valid, false} -> @wrong_arguments_result
-      {:to_user_name_valid, false} -> @wrong_arguments_result
-      {:currency_valid, false} -> @wrong_arguments_result
-      {:amount_valid, false} -> @wrong_arguments_result
+      {:params_valid, false} -> @wrong_arguments_result
       {:from_user_exists, false, nil} -> {:error, :sender_does_not_exist}
       {:to_user_exists, false, nil} -> {:error, :receiver_does_not_exist}
       {:has_enough_money, false} -> @not_enough_money_result
@@ -167,5 +168,12 @@ defmodule ExBanking do
     else
       false -> {user_atom, false, nil}
     end
+  end
+
+  def all_valid?(list) do
+    Enum.map(list, fn {val, fun} ->
+      fun.(val)
+    end)
+    |> Enum.all?()
   end
 end
