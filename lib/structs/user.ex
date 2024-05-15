@@ -21,7 +21,7 @@ defmodule Structs.User do
   @spec add_currency(user :: t(), amount :: number(), currency :: String.t()) :: t()
   def add_currency(user, amount, currency)
       when is_map(user) and is_number(amount) and is_bitstring(currency) do
-    new_amount = get_currency(user, currency) + amount
+    new_amount = get_currency(user, currency) + Formatting.format_float(amount)
 
     currencies = user.currencies
     updated_currencies = Map.put(currencies, currency, new_amount)
