@@ -10,6 +10,21 @@ In order to implement a load balancing functionality, I created a macro that yie
 
 Also, one requirement was 2 decimal precision of money. In my everyday approach is either store currency amounts in integers with multiplying 100 or handling money amounts with `decimal` type. Displaying and storing floating numbers are not an easy task. To ensure consistency it is a good practise to display them as strings, such as `"15.77"`. Function specs clearly point out that returning values should be `number()` so I didn't use `String.t()` but instead I sanitized each `number()` input after 2 points in decimal place. 
 
+## Code organization
+
+`ExBanking` module has the only wanted functions those explained below as specs.
+
+`Events` is a macro for casting `queue_increment` and `queue_decrement` messages to corresponding processes during an action (like `deposit`).
+
+`Formatting` module is to organize formatting function.
+
+`Validators` module organizes validation functions such as `valid_string?` and `valid_number?`.
+
+`Structs/User` module has a struct for user's state as well as functions for accessing user's amount in currency, adding an amount to user, and queue control functions.
+
+`Core` is the module where I used GenServer to store users' states own seperate processes.
+
+Also there are tests for each related module under `tests/` folder. 
 To run tests: `mix test`
 
 ## Public function specs
