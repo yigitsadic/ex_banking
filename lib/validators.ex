@@ -32,4 +32,12 @@ defmodule Validators do
 
   @spec valid_number?() :: false
   def valid_number?(), do: false
+
+  @spec all_valid?([{any(), function()}]) :: boolean()
+  def all_valid?(list) do
+    Enum.map(list, fn {val, fun} ->
+      fun.(val)
+    end)
+    |> Enum.all?()
+  end
 end
