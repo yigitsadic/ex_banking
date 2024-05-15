@@ -31,6 +31,7 @@ defmodule Shared do
     end
   end
 
+  @doc "Checks user exist in GenServer."
   @spec check_users_existance(user_atom :: atom(), user_name :: String.t()) ::
           {atom(), true, Structs.User.t()} | {atom(), false, nil}
   def check_users_existance(user_atom, user_name) do
