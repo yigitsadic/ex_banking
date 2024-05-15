@@ -23,7 +23,7 @@ defmodule ExBanking do
   def create_user(_any), do: @wrong_arguments_result
 
   @spec deposit(user :: String.t(), amount :: number, currency :: String.t()) ::
-          {:ok, new_balance :: number()}
+          {:ok, new_balance :: number}
           | {:error, :wrong_arguments | :user_does_not_exist | :too_many_requests_to_user}
   def deposit(user, amount, currency) do
     with {:user_name_valid, true} <- {:user_name_valid, valid_string?(user)},
@@ -34,7 +34,7 @@ defmodule ExBanking do
          {:user_exists, true} <- {:user_exists, Structs.User.user_exists?(found_user)},
          {:queue_full, false} <- {:queue_full, Structs.User.queue_full?(found_user)},
          new_balance <- Core.update_balance(user, amount, currency) do
-      {:ok, new_balance}
+      {:ok, new_balance: new_balance}
     else
       {:user_name_valid, false} -> @wrong_arguments_result
       {:currency_valid, false} -> @wrong_arguments_result
@@ -63,7 +63,7 @@ defmodule ExBanking do
            {:has_enough_money, Structs.User.can_withdraw?(found_user, amount, currency)},
          {:queue_full, false} <- {:queue_full, Structs.User.queue_full?(found_user)},
          new_balance <- Core.update_balance(user, amount * -1, currency) do
-      {:ok, new_balance}
+      {:ok, new_balance: new_balance}
     else
       {:user_name_valid, false} ->
         @wrong_arguments_result
@@ -99,7 +99,7 @@ defmodule ExBanking do
          {:user_exists, true} <- {:user_exists, Structs.User.user_exists?(found_user)},
          {:queue_full, false} <- {:queue_full, Structs.User.queue_full?(found_user)},
          balance <- Core.get_balance(user, currency) do
-      {:ok, balance}
+      {:ok, balance: balance}
     else
       {:user_name_valid, false} ->
         @wrong_arguments_result
@@ -152,7 +152,7 @@ defmodule ExBanking do
            {:has_enough_money, Structs.User.can_withdraw?(found_from_user, amount, currency)},
          new_sender_balance <- Core.update_balance(from_user, amount * -1, currency),
          new_receiver_balance <- Core.update_balance(to_user, amount, currency) do
-      {:ok, new_sender_balance, new_receiver_balance}
+      {:ok, from_user_balance: new_sender_balance, to_user_balance: new_receiver_balance}
     else
       {:from_user_name_valid, false} -> @wrong_arguments_result
       {:to_user_name_valid, false} -> @wrong_arguments_result

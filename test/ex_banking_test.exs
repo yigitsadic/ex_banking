@@ -47,8 +47,8 @@ defmodule ExBankingTest do
   test "deposit should increase balance" do
     create_user("sinem")
 
-    {:ok, first_result} = ExBanking.deposit("sinem", 1, "USD")
-    {:ok, second_result} = ExBanking.deposit("sinem", 1, "USD")
+    {:ok, new_balance: first_result} = ExBanking.deposit("sinem", 1, "USD")
+    {:ok, new_balance: second_result} = ExBanking.deposit("sinem", 1, "USD")
 
     user = Core.details("sinem")
     result = Structs.User.get_currency(user, "USD")
@@ -85,10 +85,10 @@ defmodule ExBankingTest do
     ExBanking.create_user("yigit")
     ExBanking.deposit("yigit", 10, "USD")
 
-    {:ok, new_balance} = ExBanking.withdraw("yigit", 5, "USD")
+    {:ok, new_balance: new_balance} = ExBanking.withdraw("yigit", 5, "USD")
 
     assert new_balance == 5
-    assert {:ok, new_balance} == ExBanking.get_balance("yigit", "USD")
+    assert {:ok, balance: new_balance} == ExBanking.get_balance("yigit", "USD")
   end
 
   test "get_balance user should be valid" do
@@ -105,10 +105,10 @@ defmodule ExBankingTest do
 
   test "get_balance should respond correctly" do
     ExBanking.create_user("yigit")
-    assert ExBanking.get_balance("yigit", "USD") == {:ok, 0}
+    assert ExBanking.get_balance("yigit", "USD") == {:ok, balance: 0}
 
     ExBanking.deposit("yigit", 10, "USD")
-    assert ExBanking.get_balance("yigit", "USD") == {:ok, 10}
+    assert ExBanking.get_balance("yigit", "USD") == {:ok, balance: 10}
   end
 
   test "send should validate sender name" do
@@ -154,9 +154,9 @@ defmodule ExBankingTest do
     ExBanking.deposit("yigit", 40, "USD")
     result = ExBanking.send("yigit", "sinem", 10, "USD")
 
-    assert result == {:ok, 30, 10}
-    assert ExBanking.get_balance("yigit", "USD") == {:ok, 30}
-    assert ExBanking.get_balance("sinem", "USD") == {:ok, 10}
+    assert result == {:ok, from_user_balance: 30, to_user_balance: 10}
+    assert ExBanking.get_balance("yigit", "USD") == {:ok, balance: 30}
+    assert ExBanking.get_balance("sinem", "USD") == {:ok, balance: 10}
   end
 
   test "send should cast to from_user and to_user's processes" do
