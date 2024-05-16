@@ -6,7 +6,7 @@ All actions apart from creating a user, requires a load balancing that there won
 
 Since user name is a unique identifier for users, all users have their own process from GenServer with `name_#{user_name}`. GenServer used as state holder and message broker. Every user has it's own process and the state related to user stays in that process, in result every user can access their own data.
 
-In order to implement a load balancing functionality, I created a macro that yields given function and casts `queue_increment` and `queue_decrement` to the related GenServer. 
+In order to implement a load balancing functionality, I created a macro that yields given function and casts `queue_increment` and `queue_decrement` to the related GenServer. I could also use `Process.info()` to access process' mail box count with `message_queue_len` but, I did choose to continue with my implementation.
 
 Also, one requirement was 2 decimal precision of money. In my everyday approach is either store currency amounts in integers with multiplying 100 or handling money amounts with `decimal` type. Displaying and storing floating numbers are not an easy task. To ensure consistency it is a good practise to display them as strings, such as `"15.77"`. Function specs clearly point out that returning values should be `number()` so I didn't use `String.t()` but instead I sanitized each `number()` input after 2 points in decimal place. 
 
