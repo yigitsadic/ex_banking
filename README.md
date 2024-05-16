@@ -4,7 +4,7 @@ Banking application example with functionality of creating users, getting balanc
 
 All actions apart from creating a user, requires a load balancing that there won't be more than 10 jobs in queue in any moment, if the queue is full, then they'll respond with `too_many_requests` error.
 
-All users have their own process from GenServer. GenServer used as state holder and message broker. Every user has it's own process and the state related to user stays in that process, in result every user can access their own data.
+Since user name is a unique identifier for users, all users have their own process from GenServer with `name_#{user_name}`. GenServer used as state holder and message broker. Every user has it's own process and the state related to user stays in that process, in result every user can access their own data.
 
 In order to implement a load balancing functionality, I created a macro that yields given function and casts `queue_increment` and `queue_decrement` to the related GenServer. 
 
@@ -15,6 +15,8 @@ Also, one requirement was 2 decimal precision of money. In my everyday approach 
 `ExBanking` module has the only wanted functions' delegations. Controller logic lies under `internal` folder.
 
 `Events` is a macro for casting `queue_increment` and `queue_decrement` messages to corresponding processes during an action (like `deposit`).
+
+`Shared` is a module for shared utility functions and error responses. With usage of this, I achieved unified and consistent error responses.
 
 `Formatting` module is to organize formatting function.
 
